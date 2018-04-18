@@ -25,13 +25,41 @@ public class ClientRunnable extends BaseRunnable implements Runnable {
 				Random rnd = new Random();
 
 				String name = socketSc.nextLine();
-				// Ha már tippeltünk, de rosszul:
+				// Erre a kliens elküldi azt, hogy szerinte a szerver melyik
+				// ügynökséghez tartozik.
+				// HELYES VÁLASZ:
+				int tip;
 				if (agent.getBadTips().containsKey(name)) {
+
 					int wrongAgencyCode = agent.getBadTips().get(name);
-					int newTip = (wrongAgencyCode == 1 ? 2 : 1);
-					sendMessage(socketPw, newTip);
-				} else {
-					sendMessage(socketPw, rnd.nextInt(2) + 1);
+					tip = (wrongAgencyCode == 1 ? 2 : 1);
+					sendMessage(socketPw, tip);
+				}
+				// TIPP:
+				else {
+					tip = rnd.nextInt(2) + 1;
+					sendMessage(socketPw, tip);
+				}
+				//
+				if (client.isConnected()) {
+
+					// Ha jól tippelt:
+					if (socketSc.nextLine().equals("OK")) {
+						// Ha azonos ügynökséghez tartoznak:
+						if (tip == agent.getAgencyCode()) {
+							// Véletlen secret küldése:
+							sendMessage(socketPw, agent.getRndSecret(false));
+							// Secret fogadása és mentése:
+							agent.getSecret().put(socketSc.nextLine(), true);
+							// Kapcsolat zárása:
+							client.close();
+						}
+						// Ha nem azonos ügynökséghez tartoznak:
+						else {
+							sendMessage(socketPw, "???");
+							sendMessage(socketPw, );
+						}
+					}
 				}
 
 				// Thread.sleep(rndUtil.generateTimeout());

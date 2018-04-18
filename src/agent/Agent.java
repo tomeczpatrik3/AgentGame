@@ -2,6 +2,7 @@ package agent;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -22,7 +23,7 @@ public class Agent {
 	private int agentCode;
 	private List<String> names;
 	private Map<String, Integer> badTips;
-	private String secret;
+	private Map<String, Boolean> secrets;
 
 	// Szálak:
 	private Thread clientThread;
@@ -31,6 +32,7 @@ public class Agent {
 	public Agent(int agencyCode, int agentCode, int minTimeout, int maxTimeout) {
 		rnd = new Random();
 		badTips = new HashMap<>();
+		secrets = new HashMap<>();
 
 		this.agencyCode = agencyCode;
 		this.agentCode = agentCode;
@@ -45,7 +47,7 @@ public class Agent {
 		for (int i = 0; i < names.size(); i++) {
 			System.out.println("\t" + names.get(i));
 		}
-		System.out.println("Titok:\t" + secret);
+		System.out.println("Titok:\t" + secrets.keySet().toArray()[0]);
 
 		clientThread = new Thread(new ClientRunnable(this, maxTimeout,
 				minTimeout));
@@ -77,7 +79,7 @@ public class Agent {
 			Scanner sc = new Scanner(new File(getFileName()));
 
 			this.names = Arrays.asList(sc.nextLine().split(" "));
-			this.secret = sc.nextLine();
+			this.secrets.put(sc.nextLine(), true);
 
 		} catch (FileNotFoundException e) {
 			System.err.println(String.format("Nem létező fájl (%s)",
@@ -88,6 +90,24 @@ public class Agent {
 
 	public String getRndName() {
 		return this.names.get(this.rnd.nextInt(this.names.size()));
+	}
+
+	public String getRndSecret(boolean checkValue) {
+		List<String> secretsList = new ArrayList<>();
+		secretsList.addAll(secrets.keySet());
+		if (checkValue) {
+			return secretsList.get(this.rnd.nextInt(secretsList.size()));
+		} else {
+			String tempSecret = secretsList.get(this.rnd.nextInt(secretsList
+					.size()));
+			while (secrets.get(tempSecret) == false) {
+				tempSecret = secretsList.get(this.rnd.nextInt(secretsList
+						.size()));
+			}
+			secrets.put(tempSecret, false);
+			return tempSecret;
+		}
+
 	}
 
 	public int getAgencyCode() {
@@ -114,19 +134,19 @@ public class Agent {
 		this.names = names;
 	}
 
-	public String getSecret() {
-		return secret;
-	}
-
-	public void setSecret(String secret) {
-		this.secret = secret;
-	}
-
 	public Map<String, Integer> getBadTips() {
 		return badTips;
 	}
 
 	public void setBadTips(Map<String, Integer> badTips) {
 		this.badTips = badTips;
+	}
+
+	public Map<String, Boolean> getSecret() {
+		return secrets;
+	}
+
+	public void setSecret(Map<String, Boolean> secret) {
+		this.secrets = secret;
 	}
 }
