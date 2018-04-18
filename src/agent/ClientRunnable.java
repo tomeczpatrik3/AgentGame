@@ -89,6 +89,10 @@ public class ClientRunnable extends BaseRunnable implements Runnable {
 			} catch (IOException ex) {
 				// Thread.sleep(rndUtil.generateTimeout());
 			}
+			if(!agent.isHasAvailableSecrets())
+			{
+				agent.stopClientThread();
+			}
 		}
 	}
 }

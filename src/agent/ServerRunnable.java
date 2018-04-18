@@ -60,6 +60,9 @@ public class ServerRunnable extends BaseRunnable implements Runnable {
 				} catch (IOException ex) {
 					ex.printStackTrace();
 				}
+				if (!agent.isHasAvailableSecrets()) {
+					agent.stopServerThread();
+				}
 			}
 		} catch (IOException ex) {
 			ex.printStackTrace();

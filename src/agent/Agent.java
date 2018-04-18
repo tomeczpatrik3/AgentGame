@@ -23,6 +23,7 @@ public class Agent {
 	// Adott ügynök adatai:
 	private Agency agency;
 	private int agentCode;
+	private boolean hasAvailableSecrets;
 	private List<String> names;
 	private Map<String, Integer> badTips;
 	private Map<String, Boolean> secrets;
@@ -42,6 +43,8 @@ public class Agent {
 
 		this.agency = agency;
 		this.agentCode = agentCode;
+
+		this.setHasAvailableSecrets(true);
 
 		System.out.println(String.format("%s. ügynökséghez tartozó %d. ügynök adatai:", agency.getName(), agentCode));
 
@@ -75,9 +78,8 @@ public class Agent {
 	}
 
 	private void readInformation() {
-		try {
-			System.out.println("Adatok beolvasás a " + getFileName() + " fájlból!");
-			Scanner sc = new Scanner(new File(getFileName()));
+		System.out.println("Adatok beolvasás a " + getFileName() + " fájlból!");
+		try (Scanner sc = new Scanner(new File(getFileName()));){
 
 			this.names = Arrays.asList(sc.nextLine().split(" "));
 			this.secrets.put(sc.nextLine(), true);
@@ -95,26 +97,28 @@ public class Agent {
 	public String getRndSecret(boolean checkValue) {
 		List<String> secretsList = new ArrayList<>();
 		secretsList.addAll(secrets.keySet());
-		if (hasAvailableSecrets()) {
-			if (checkValue) {
-				return secretsList.get(this.rnd.nextInt(secretsList.size()));
-			} else {
-				String tempSecret = secretsList.get(this.rnd.nextInt(secretsList.size()));
-				while (secrets.get(tempSecret) == false) {
-					tempSecret = secretsList.get(this.rnd.nextInt(secretsList.size()));
-				}
-				secrets.put(tempSecret, false);
-				return tempSecret;
-			}
+
+		if (checkValue) {
+			return secretsList.get(this.rnd.nextInt(secretsList.size()));
 		} else {
-			stopThreads();
-			return "";
+			String tempSecret = secretsList.get(this.rnd.nextInt(secretsList.size()));
+			while (secrets.get(tempSecret) == false) {
+				tempSecret = secretsList.get(this.rnd.nextInt(secretsList.size()));
+			}
+			secrets.put(tempSecret, false);
+			if (!hasAvailableSecrets()) {
+				setHasAvailableSecrets(false);
+			}
+			return tempSecret;
 		}
 	}
 
-	private void stopThreads() {
-		this.clientThread.interrupt();
+	public void stopServerThread() {
 		this.serverThread.interrupt();
+	}
+	public void stopClientThread() {
+		this.clientThread.interrupt();
+
 	}
 
 	private boolean hasAvailableSecrets() {
@@ -175,5 +179,13 @@ public class Agent {
 
 	public void setFinalNumbers(Map<Integer, Integer> finalNumbers) {
 		this.finalNumbers = finalNumbers;
+	}
+
+	public boolean isHasAvailableSecrets() {
+		return hasAvailableSecrets;
+	}
+
+	public void setHasAvailableSecrets(boolean hasAvailableSecrets) {
+		this.hasAvailableSecrets = hasAvailableSecrets;
 	}
 }
