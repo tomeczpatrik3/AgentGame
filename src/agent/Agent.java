@@ -15,31 +15,35 @@ public class Agent {
 	public static final String ADRESS = "localhost";
 	public static final int MIN_PORT = 20000;
 	public static final int MAX_PORT = 20100;
+	public static int agencyAAgents;
+	public static int agencyBAgents;
 
 	private Random rnd;
 
 	// Adott ügynök adatai:
-	private int agencyCode;
+	private Agency agency;
 	private int agentCode;
 	private List<String> names;
 	private Map<String, Integer> badTips;
 	private Map<String, Boolean> secrets;
+	private Map<Integer, List<Integer>> guessedNumbers;
+	private Map<Integer, Integer> finalNumbers;
 
 	// Szálak:
 	private Thread clientThread;
 	private Thread serverThread;
 
-	public Agent(int agencyCode, int agentCode, int minTimeout, int maxTimeout) {
+	public Agent(Agency agency, int agentCode, int minTimeout, int maxTimeout) {
 		rnd = new Random();
 		badTips = new HashMap<>();
 		secrets = new HashMap<>();
+		guessedNumbers = new HashMap<>();
+		setFinalNumbers(new HashMap<>());
 
-		this.agencyCode = agencyCode;
+		this.agency = agency;
 		this.agentCode = agentCode;
 
-		System.out.println(String.format(
-				"%d. ügynökséghez tartozó %d. ügynök adatai:", agencyCode,
-				agentCode));
+		System.out.println(String.format("%s. ügynökséghez tartozó %d. ügynök adatai:", agency.getName(), agentCode));
 
 		readInformation();
 
@@ -49,10 +53,8 @@ public class Agent {
 		}
 		System.out.println("Titok:\t" + secrets.keySet().toArray()[0]);
 
-		clientThread = new Thread(new ClientRunnable(this, maxTimeout,
-				minTimeout));
-		serverThread = new Thread(new ServerRunnable(this, maxTimeout,
-				minTimeout));
+		clientThread = new Thread(new ClientRunnable(this, maxTimeout, minTimeout));
+		serverThread = new Thread(new ServerRunnable(this, maxTimeout, minTimeout));
 
 	}
 
@@ -63,27 +65,25 @@ public class Agent {
 			clientThread.join();
 			serverThread.join();
 		} catch (InterruptedException ex) {
-			System.err.println("Thread interrupted");
+			System.err.println(String.format("%s. ügynökséghez tartozó %s. kódú ügynök letartóztatva", agency.getCode(), agentCode));
 			System.exit(4);
 		}
 	}
 
 	private String getFileName() {
-		return String.format("agent%d-%d.txt", agencyCode, agentCode);
+		return String.format("agent%d-%d.txt", agency.getCode(), agentCode);
 	}
 
 	private void readInformation() {
 		try {
-			System.out.println("Adatok beolvasás a " + getFileName()
-					+ " fájlból!");
+			System.out.println("Adatok beolvasás a " + getFileName() + " fájlból!");
 			Scanner sc = new Scanner(new File(getFileName()));
 
 			this.names = Arrays.asList(sc.nextLine().split(" "));
 			this.secrets.put(sc.nextLine(), true);
 
 		} catch (FileNotFoundException e) {
-			System.err.println(String.format("Nem létező fájl (%s)",
-					getFileName()));
+			System.err.println(String.format("Nem létező fájl (%s)", getFileName()));
 			System.exit(5);
 		}
 	}
@@ -95,27 +95,30 @@ public class Agent {
 	public String getRndSecret(boolean checkValue) {
 		List<String> secretsList = new ArrayList<>();
 		secretsList.addAll(secrets.keySet());
-		if (checkValue) {
-			return secretsList.get(this.rnd.nextInt(secretsList.size()));
-		} else {
-			String tempSecret = secretsList.get(this.rnd.nextInt(secretsList
-					.size()));
-			while (secrets.get(tempSecret) == false) {
-				tempSecret = secretsList.get(this.rnd.nextInt(secretsList
-						.size()));
+		if (hasAvailableSecrets()) {
+			if (checkValue) {
+				return secretsList.get(this.rnd.nextInt(secretsList.size()));
+			} else {
+				String tempSecret = secretsList.get(this.rnd.nextInt(secretsList.size()));
+				while (secrets.get(tempSecret) == false) {
+					tempSecret = secretsList.get(this.rnd.nextInt(secretsList.size()));
+				}
+				secrets.put(tempSecret, false);
+				return tempSecret;
 			}
-			secrets.put(tempSecret, false);
-			return tempSecret;
+		} else {
+			stopThreads();
+			return "";
 		}
-
 	}
 
-	public int getAgencyCode() {
-		return agencyCode;
+	private void stopThreads() {
+		this.clientThread.interrupt();
+		this.serverThread.interrupt();
 	}
 
-	public void setAgencyCode(int agencyCode) {
-		this.agencyCode = agencyCode;
+	private boolean hasAvailableSecrets() {
+		return this.secrets.containsValue(true);
 	}
 
 	public int getAgentCode() {
@@ -142,11 +145,35 @@ public class Agent {
 		this.badTips = badTips;
 	}
 
-	public Map<String, Boolean> getSecret() {
+	public Map<String, Boolean> getSecrets() {
 		return secrets;
 	}
 
-	public void setSecret(Map<String, Boolean> secret) {
-		this.secrets = secret;
+	public void setSecrets(Map<String, Boolean> secrets) {
+		this.secrets = secrets;
+	}
+
+	public Map<Integer, List<Integer>> getGuessedNumbers() {
+		return guessedNumbers;
+	}
+
+	public void setGuessedNumbers(Map<Integer, List<Integer>> guessedNumbers) {
+		this.guessedNumbers = guessedNumbers;
+	}
+
+	public Agency getAgency() {
+		return agency;
+	}
+
+	public void setAgency(Agency agency) {
+		this.agency = agency;
+	}
+
+	public Map<Integer, Integer> getFinalNumbers() {
+		return finalNumbers;
+	}
+
+	public void setFinalNumbers(Map<Integer, Integer> finalNumbers) {
+		this.finalNumbers = finalNumbers;
 	}
 }
