@@ -1,20 +1,13 @@
-package agent;
+package agent.runnable;
 
 import java.io.PrintWriter;
+import agent.model.Agent;
 
 public abstract class BaseRunnable {
-	protected RndUtil rndUtil;
 	protected Agent agent;
 
-	public BaseRunnable(Agent agent, RndUtil rndUtil) {
+	public BaseRunnable(Agent agent) {
 		this.agent = agent;
-		this.rndUtil = rndUtil;
-	}
-
-	public BaseRunnable(Agent agent, int maxTimeout, int minTimeout) {
-		this.agent = agent;
-		this.rndUtil = new RndUtil(Agent.MAX_PORT, Agent.MIN_PORT, maxTimeout,
-				minTimeout);
 	}
 
 	protected void sendMessage(PrintWriter pw, String msg) {

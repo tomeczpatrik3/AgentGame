@@ -1,4 +1,4 @@
-package agent;
+package agent.runnable;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -7,27 +7,28 @@ import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
 
-public class ClientRunnable extends BaseRunnable implements Runnable {
-	public ClientRunnable(Agent agent, RndUtil rndUtil) {
-		super(agent, rndUtil);
-	}
+import agent.config.Constraint;
+import agent.model.Agent;
+import agent.util.RndUtil;
 
-	public ClientRunnable(Agent agent, int maxTimeout, int minTimeout) {
-		super(agent, maxTimeout, minTimeout);
+public class ClientRunnable extends BaseRunnable implements Runnable {
+	public ClientRunnable(Agent agent) {
+		super(agent);
 	}
 
 	@Override
 	public void run() {
 		Random rnd = new Random();
 		while (true) {
-			try (Socket client = new Socket(Agent.ADRESS, rndUtil.generatePort()); Scanner socketSc = new Scanner(client.getInputStream()); PrintWriter socketPw = new PrintWriter(client.getOutputStream());) {
+			try (Socket client = new Socket(Constraint.ADRESS, RndUtil.generatePort()); Scanner socketSc = new Scanner(client.getInputStream()); PrintWriter socketPw = new PrintWriter(client.getOutputStream());) {
 				String name = socketSc.nextLine();
+
+				// <----- PROTOKOL ----->
 				// Erre a kliens elküldi azt, hogy szerinte a szerver melyik
 				// ügynökséghez tartozik.
 				// HELYES VÁLASZ:
 				int tip;
 				if (agent.getBadTips().containsKey(name)) {
-
 					int wrongAgencyCode = agent.getBadTips().get(name);
 					tip = (wrongAgencyCode == 1 ? 2 : 1);
 					sendMessage(socketPw, tip);
@@ -57,9 +58,12 @@ public class ClientRunnable extends BaseRunnable implements Runnable {
 							// sendMessage(socketPw, );
 							int agentCodeTip = -1;
 							int clientPort = client.getPort();
+							// A másik ügynökségben dolgozó ügynökök számának
+							// lekérdezése:
 							int otherAgents = Integer.parseInt(socketSc.nextLine());
 							List<Integer> agentCodeTips;
-							if (agent.getGuessedNumbers().keySet().contains(clientPort)) {
+							// Ha már tippeltünk erre a szerverre:
+							if (agent.getGuessedNumbers().containsKey(clientPort)) {
 								agentCodeTips = agent.getGuessedNumbers().get(clientPort);
 								// Ha már tudjuk a kódját:
 								if (agentCodeTips.size() != otherAgents) {
@@ -75,6 +79,8 @@ public class ClientRunnable extends BaseRunnable implements Runnable {
 									agent.getGuessedNumbers().put(clientPort, agentCodeTips);
 									sendMessage(socketPw, agentCodeTip);
 								}
+
+								// Ha helyesen tippeltünk:
 								if (client.isConnected()) {
 									if (!agent.getFinalNumbers().containsKey(clientPort) && agentCodeTip != -1) {
 										agent.getFinalNumbers().put(clientPort, agentCodeTip);
@@ -89,8 +95,9 @@ public class ClientRunnable extends BaseRunnable implements Runnable {
 			} catch (IOException ex) {
 				// Thread.sleep(rndUtil.generateTimeout());
 			}
-			if(!agent.isHasAvailableSecrets())
-			{
+
+			// Játék végének a vizsgálata:
+			if (!agent.isHasAvailableSecrets()) {
 				agent.stopClientThread();
 			}
 		}

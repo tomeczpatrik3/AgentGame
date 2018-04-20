@@ -1,4 +1,4 @@
-package agent;
+package agent.runnable;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -6,21 +6,22 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
 
-public class ServerRunnable extends BaseRunnable implements Runnable {
-	public ServerRunnable(Agent agent, RndUtil rndUtil) {
-		super(agent, rndUtil);
-	}
+import agent.config.Constraint;
+import agent.model.Agent;
+import agent.util.RndUtil;
 
-	public ServerRunnable(Agent agent, int maxTimeout, int minTimeout) {
-		super(agent, maxTimeout, minTimeout);
+public class ServerRunnable extends BaseRunnable implements Runnable {
+	public ServerRunnable(Agent agent) {
+		super(agent);
 	}
 
 	@Override
 	public void run() {
-		try (ServerSocket server = new ServerSocket(rndUtil.generatePort());) {
-			server.setSoTimeout(rndUtil.getMaxTimeout());
+		try (ServerSocket server = new ServerSocket(RndUtil.generatePort());) {
+			server.setSoTimeout(Constraint.MAX_TIMEOUT);
 			while (true) {
 				try (Socket client = server.accept(); Scanner socketSc = new Scanner(client.getInputStream()); PrintWriter socketPw = new PrintWriter(client.getOutputStream());) {
+					// <----- PROTOKOL ----->
 					// A szerver elküldi az álnevei közül az egyiket
 					// véletlenszerűen.
 					sendMessage(socketPw, agent.getRndName());
@@ -30,13 +31,17 @@ public class ServerRunnable extends BaseRunnable implements Runnable {
 					if (tip == agent.getAgency().getCode()) {
 						sendMessage(socketPw, "OK");
 						String msg = socketSc.nextLine();
+						// Ha különböző ügynökséghez tartoznak:
 						if (msg.equals("???")) {
-							sendMessage(socketPw, agent.getAgency().getAgents());
+							// Ügynökségen dolgozó ügynökök számának elküldése:
+							sendMessage(socketPw, agent.getAgency().getAgentsNumber());
 							int guessedAgentCode = Integer.parseInt(socketSc.nextLine());
+							// Ha helyes volt a tipp:
 							if (agent.getAgentCode() == guessedAgentCode) {
 								sendMessage(socketPw, agent.getRndSecret(true));
-
-							} else {
+							}
+							// Ha nem:
+							else {
 								client.close();
 							}
 						}
@@ -60,6 +65,8 @@ public class ServerRunnable extends BaseRunnable implements Runnable {
 				} catch (IOException ex) {
 					ex.printStackTrace();
 				}
+
+				// Játék végének a vizsgálata:
 				if (!agent.isHasAvailableSecrets()) {
 					agent.stopServerThread();
 				}

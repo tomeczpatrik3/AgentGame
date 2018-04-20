@@ -1,4 +1,4 @@
-package agent;
+package agent.model;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -10,14 +10,10 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Scanner;
 
-public class Agent {
-	// Beégetett értékek:
-	public static final String ADRESS = "localhost";
-	public static final int MIN_PORT = 20000;
-	public static final int MAX_PORT = 20100;
-	public static int agencyAAgents;
-	public static int agencyBAgents;
+import agent.runnable.ClientRunnable;
+import agent.runnable.ServerRunnable;
 
+public class Agent {
 	private Random rnd;
 
 	// Adott ügynök adatai:
@@ -34,7 +30,7 @@ public class Agent {
 	private Thread clientThread;
 	private Thread serverThread;
 
-	public Agent(Agency agency, int agentCode, int minTimeout, int maxTimeout) {
+	public Agent(Agency agency, int agentCode) {
 		rnd = new Random();
 		badTips = new HashMap<>();
 		secrets = new HashMap<>();
@@ -46,7 +42,7 @@ public class Agent {
 
 		this.setHasAvailableSecrets(true);
 
-		System.out.println(String.format("%s. ügynökséghez tartozó %d. ügynök adatai:", agency.getName(), agentCode));
+		System.out.println(String.format("\n%s. ügynökséghez tartozó %d. ügynök adatai:", agency.getName(), agentCode));
 
 		readInformation();
 
@@ -56,8 +52,8 @@ public class Agent {
 		}
 		System.out.println("Titok:\t" + secrets.keySet().toArray()[0]);
 
-		clientThread = new Thread(new ClientRunnable(this, maxTimeout, minTimeout));
-		serverThread = new Thread(new ServerRunnable(this, maxTimeout, minTimeout));
+		clientThread = new Thread(new ClientRunnable(this));
+		serverThread = new Thread(new ServerRunnable(this));
 
 	}
 
@@ -118,7 +114,6 @@ public class Agent {
 	}
 	public void stopClientThread() {
 		this.clientThread.interrupt();
-
 	}
 
 	private boolean hasAvailableSecrets() {
