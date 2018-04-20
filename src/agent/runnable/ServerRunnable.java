@@ -4,9 +4,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 
-import agent.config.Constraint;
+import agent.config.Constants;
 import agent.model.Agent;
 import agent.util.RndUtil;
 
@@ -18,7 +20,7 @@ public class ServerRunnable extends BaseRunnable implements Runnable {
 	@Override
 	public void run() {
 		try (ServerSocket server = new ServerSocket(RndUtil.generatePort());) {
-			server.setSoTimeout(Constraint.MAX_TIMEOUT);
+			server.setSoTimeout(Constants.MAX_TIMEOUT);
 			while (true) {
 				try (Socket client = server.accept(); Scanner socketSc = new Scanner(client.getInputStream()); PrintWriter socketPw = new PrintWriter(client.getOutputStream());) {
 					// <----- PROTOKOL ----->
@@ -33,7 +35,8 @@ public class ServerRunnable extends BaseRunnable implements Runnable {
 						String msg = socketSc.nextLine();
 						// Ha különböző ügynökséghez tartoznak:
 						if (msg.equals("???")) {
-							// Ügynökségen dolgozó ügynökök számának elküldése:
+							// Ügynökségen dolgozó ügynökök számának
+							// elküldése:
 							sendMessage(socketPw, agent.getAgency().getAgentsNumber());
 							int guessedAgentCode = Integer.parseInt(socketSc.nextLine());
 							// Ha helyes volt a tipp:
@@ -62,6 +65,8 @@ public class ServerRunnable extends BaseRunnable implements Runnable {
 					}
 
 					// client.wait();
+				} catch (SocketTimeoutException ex) {
+					System.out.println("Időtúllépés, újrapróbálkozás!");
 				} catch (IOException ex) {
 					ex.printStackTrace();
 				}
@@ -70,10 +75,11 @@ public class ServerRunnable extends BaseRunnable implements Runnable {
 				if (!agent.isHasAvailableSecrets()) {
 					agent.stopServerThread();
 				}
+				
+				System.out.println("-------------");
 			}
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		}
 	}
-
 }

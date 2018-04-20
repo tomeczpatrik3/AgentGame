@@ -3,11 +3,13 @@ package agent.runnable;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.Scanner;
 
-import agent.config.Constraint;
+import agent.config.Constants;
 import agent.model.Agent;
 import agent.util.RndUtil;
 
@@ -20,7 +22,7 @@ public class ClientRunnable extends BaseRunnable implements Runnable {
 	public void run() {
 		Random rnd = new Random();
 		while (true) {
-			try (Socket client = new Socket(Constraint.ADRESS, RndUtil.generatePort()); Scanner socketSc = new Scanner(client.getInputStream()); PrintWriter socketPw = new PrintWriter(client.getOutputStream());) {
+			try (Socket client = new Socket(Constants.ADRESS, RndUtil.generatePort()); Scanner socketSc = new Scanner(client.getInputStream()); PrintWriter socketPw = new PrintWriter(client.getOutputStream());) {
 				String name = socketSc.nextLine();
 
 				// <----- PROTOKOL ----->
@@ -42,7 +44,7 @@ public class ClientRunnable extends BaseRunnable implements Runnable {
 				if (client.isConnected()) {
 
 					// Ha jól tippelt:
-					if (socketSc.nextLine().equals("OK")) {
+					if (socketSc.hasNextLine() && socketSc.nextLine().equals("OK")) {
 						// Ha azonos ügynökséghez tartoznak:
 						if (tip == agent.getAgency().getCode()) {
 							// Véletlen secret küldése:
@@ -66,7 +68,7 @@ public class ClientRunnable extends BaseRunnable implements Runnable {
 							if (agent.getGuessedNumbers().containsKey(clientPort)) {
 								agentCodeTips = agent.getGuessedNumbers().get(clientPort);
 								// Ha már tudjuk a kódját:
-								if (agentCodeTips.size() != otherAgents) {
+								if (agent.getFinalNumbers().containsKey(clientPort)) {
 									sendMessage(socketPw, agent.getFinalNumbers().get(clientPort));
 								}
 								// Ha még nem:
@@ -79,15 +81,20 @@ public class ClientRunnable extends BaseRunnable implements Runnable {
 									agent.getGuessedNumbers().put(clientPort, agentCodeTips);
 									sendMessage(socketPw, agentCodeTip);
 								}
-
-								// Ha helyesen tippeltünk:
-								if (client.isConnected()) {
-									if (!agent.getFinalNumbers().containsKey(clientPort) && agentCodeTip != -1) {
-										agent.getFinalNumbers().put(clientPort, agentCodeTip);
-									}
-									agent.getSecrets().put(socketSc.nextLine(), true);
-								}
+							} else {
+								agentCodeTip = rnd.nextInt(otherAgents);
+								agent.getGuessedNumbers().put(clientPort, Arrays.asList(agentCodeTip));
+								sendMessage(socketPw, agentCodeTip);
 							}
+							// Ha helyesen tippeltünk:
+							if (client.isConnected()) {
+								if (!agent.getFinalNumbers().containsKey(clientPort) && agentCodeTip != -1) {
+									agent.getFinalNumbers().put(clientPort, agentCodeTip);
+								}
+								if (socketSc.hasNextLine())
+									agent.getSecrets().put(socketSc.nextLine(), true);
+							}
+
 						}
 					}
 				}
