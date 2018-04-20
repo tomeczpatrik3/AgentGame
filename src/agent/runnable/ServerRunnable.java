@@ -19,8 +19,9 @@ public class ServerRunnable extends BaseRunnable implements Runnable {
 
 	@Override
 	public void run() {
-		try (ServerSocket server = new ServerSocket(RndUtil.generatePort());) {
-			server.setSoTimeout(Constants.MAX_TIMEOUT);
+//		try (ServerSocket server = new ServerSocket(RndUtil.generatePort());) {
+		try (ServerSocket server = new ServerSocket(20100);) {
+			//server.setSoTimeout(Constants.MAX_TIMEOUT);
 			while (true) {
 				try (Socket client = server.accept(); Scanner socketSc = new Scanner(client.getInputStream()); PrintWriter socketPw = new PrintWriter(client.getOutputStream());) {
 					// <----- PROTOKOL ----->
@@ -66,7 +67,8 @@ public class ServerRunnable extends BaseRunnable implements Runnable {
 
 					// client.wait();
 				} catch (SocketTimeoutException ex) {
-					System.out.println("Időtúllépés, újrapróbálkozás!");
+//					System.out.println("Időtúllépés, újrapróbálkozás!");
+					ex.printStackTrace();
 				} catch (IOException ex) {
 					ex.printStackTrace();
 				}
@@ -75,8 +77,7 @@ public class ServerRunnable extends BaseRunnable implements Runnable {
 				if (!agent.isHasAvailableSecrets()) {
 					agent.stopServerThread();
 				}
-				
-				System.out.println("-------------");
+//				agent.printSecrets();
 			}
 		} catch (IOException ex) {
 			ex.printStackTrace();

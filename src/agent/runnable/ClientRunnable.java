@@ -22,7 +22,8 @@ public class ClientRunnable extends BaseRunnable implements Runnable {
 	public void run() {
 		Random rnd = new Random();
 		while (true) {
-			try (Socket client = new Socket(Constants.ADRESS, RndUtil.generatePort()); Scanner socketSc = new Scanner(client.getInputStream()); PrintWriter socketPw = new PrintWriter(client.getOutputStream());) {
+//			try (Socket client = new Socket(Constants.ADRESS, RndUtil.generatePort()); Scanner socketSc = new Scanner(client.getInputStream()); PrintWriter socketPw = new PrintWriter(client.getOutputStream());) {
+			try (Socket client = new Socket(Constants.ADRESS, 20100); Scanner socketSc = new Scanner(client.getInputStream()); PrintWriter socketPw = new PrintWriter(client.getOutputStream());) {
 				String name = socketSc.nextLine();
 
 				// <----- PROTOKOL ----->

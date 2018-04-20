@@ -57,11 +57,19 @@ public class Agent {
 
 	}
 
-	public void startThreads() {
+	public void startClientThread() {
 		clientThread.start();
-		serverThread.start();
 		try {
 			clientThread.join();
+		} catch (InterruptedException ex) {
+			System.err.println(String.format("%s. ügynökséghez tartozó %s. kódú ügynök letartóztatva", agency.getCode(), agentCode));
+			System.exit(4);
+		}
+	}
+
+	public void startServerThread() {
+		serverThread.start();
+		try {
 			serverThread.join();
 		} catch (InterruptedException ex) {
 			System.err.println(String.format("%s. ügynökséghez tartozó %s. kódú ügynök letartóztatva", agency.getCode(), agentCode));
@@ -75,7 +83,7 @@ public class Agent {
 
 	private void readInformation() {
 		System.out.println("Adatok beolvasás a " + getFileName() + " fájlból!");
-		try (Scanner sc = new Scanner(new File(getFileName()));){
+		try (Scanner sc = new Scanner(new File(getFileName()));) {
 
 			this.names = Arrays.asList(sc.nextLine().split(" "));
 			this.secrets.put(sc.nextLine(), true);
@@ -109,9 +117,17 @@ public class Agent {
 		}
 	}
 
+	public void printSecrets() {
+		for (String secret : secrets.keySet()) {
+			System.out.printf("%s ", secret);
+		}
+		System.out.println();
+	}
+
 	public void stopServerThread() {
 		this.serverThread.interrupt();
 	}
+
 	public void stopClientThread() {
 		this.clientThread.interrupt();
 	}
