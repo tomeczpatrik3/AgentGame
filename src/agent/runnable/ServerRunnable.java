@@ -5,7 +5,6 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
-import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 import agent.config.Constants;
@@ -22,7 +21,16 @@ public class ServerRunnable extends BaseRunnable implements Runnable {
 	public void run() {
 		while (!isOver) {
 			try {
-				ServerSocket server = createServer();
+				ServerSocket server;
+				//Ha tesztelünk:
+				if (agent.isTestMode()) {
+					log("----- TESZT MÓD -----");
+					server = new ServerSocket(agent.getServerPort());
+				}
+				//Ha nem:
+				else {
+					server = createServer();
+				}
 				server.setSoTimeout(Constants.MAX_TIMEOUT);
 				
 				try (Socket client = server.accept(); Scanner socketSc = new Scanner(client.getInputStream()); PrintWriter socketPw = new PrintWriter(client.getOutputStream());) {

@@ -31,8 +31,39 @@ public class Agent {
 	private Thread serverThread;
 	private ClientRunnable clientRunnable;
 	private ServerRunnable serverRunnable;
+	
+	//Teszteléshez:
+	private int serverPort, clientPort;
+	private boolean testMode;
 
+	/**
+	 * Az alapesetben használt konstruktor:
+	 * @param agency
+	 * @param agentCode
+	 */
 	public Agent(Agency agency, int agentCode) {
+		initalizeAgent(agency, agentCode);
+		this.serverPort = -1;
+		this.clientPort = -1;
+		this.testMode = false;
+	}
+	
+	/**
+	 * A teszteléshez használt konstruktor:
+	 * @param agency
+	 * @param agentCode
+	 */
+	public Agent(Agency agency, int agentCode, int serverPort, int clientPort) {
+		initalizeAgent(agency, agentCode);
+		this.serverPort = serverPort;
+		this.clientPort = clientPort;
+		this.testMode = true;
+	}
+	
+	/**
+	 * Az objektum inicalizálását végző függvény:
+	 */
+	private void initalizeAgent(Agency agency, int agentCode) {
 		rnd = new Random();
 		badTips = new HashMap<>();
 		secrets = new HashMap<>();
@@ -52,8 +83,8 @@ public class Agent {
 		for (int i = 0; i < names.size(); i++) {
 			System.out.println("\t" + names.get(i));
 		}
-		System.out.println("Titok:\t" + secrets.keySet().toArray()[0]);
-
+		System.out.println("Titkok:");
+		printSecrets();
 	}
 
 	/**
@@ -138,7 +169,7 @@ public class Agent {
 	}
 
 	
-	/*-----------GETTER/SETTER--------------*/
+	/*-----------GETTERS & SETTERS--------------*/
 	
 	
 	private boolean hasAvailableSecrets() {
@@ -211,5 +242,17 @@ public class Agent {
 	
 	public ServerRunnable getServerRunnable() {
 		return this.serverRunnable;
+	}
+
+	public int getServerPort() {
+		return serverPort;
+	}
+
+	public int getClientPort() {
+		return clientPort;
+	}
+
+	public boolean isTestMode() {
+		return testMode;
 	}
 }
