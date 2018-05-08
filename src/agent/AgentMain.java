@@ -30,18 +30,14 @@ public class AgentMain {
 			for (int i = 0; i < aAgents; i++) {
 				agent = new Agent(aAgency, i + 1);
 				aAgency.addAgent(agent);
-				agent.startServerThread();
-				// thread = createAgentThread(agent);
-				// thread.start();
+				agent.startThreads();
 			}
 			System.out.println(String.format("A(z) '%s' ügynökséghez tartozó ügynökök felvéve. Ügynökök száma: %d!\n", aAgency.getName(), aAgency.getAgentsNumber()));
 
 			for (int i = 0; i < bAgents; i++) {
 				agent = new Agent(bAgency, i + 1);
 				bAgency.addAgent(agent);
-				agent.startClientThread();
-				// thread = createAgentThread(agent);
-				// thread.start();
+				agent.startThreads();
 			}
 			System.out.println(String.format("A(z) '%s' ügynökséghez tartozó ügynökök felvéve. Ügynökök száma: %d!\n", bAgency.getName(), bAgency.getAgentsNumber()));
 
@@ -56,8 +52,7 @@ public class AgentMain {
 
 	public static Thread createAgentThread(Agent agent) {
 		return new Thread(() -> {
-			agent.startClientThread();
-			agent.startServerThread();
+			agent.startThreads();
 		});
 	}
 }

@@ -15,22 +15,30 @@ import agent.util.RndUtil;
 public class ServerRunnable extends BaseRunnable implements Runnable {
 	public ServerRunnable(Agent agent) {
 		super(agent);
+		isOver = false;
 	}
 
 	@Override
 	public void run() {
-//		try (ServerSocket server = new ServerSocket(RndUtil.generatePort());) {
-		try (ServerSocket server = new ServerSocket(20100);) {
-			//server.setSoTimeout(Constants.MAX_TIMEOUT);
-			while (true) {
+		while (!isOver) {
+			try {
+				ServerSocket server = createServer();
+				server.setSoTimeout(Constants.MAX_TIMEOUT);
+				
 				try (Socket client = server.accept(); Scanner socketSc = new Scanner(client.getInputStream()); PrintWriter socketPw = new PrintWriter(client.getOutputStream());) {
+					System.out.println("Szerver: Sikeresen kapcsolodott egy kliens!");
+					
 					// <----- PROTOKOL ----->
 					// A szerver elküldi az álnevei közül az egyiket
 					// véletlenszerűen.
+					System.out.println("Szerver: Véletlen név elküldése!");
 					sendMessage(socketPw, agent.getRndName());
 
+					//Tipp fogadása:
 					int tip = Integer.parseInt(socketSc.nextLine());
-					// Különben a szerver elküldi az OK szöveget.
+					log("Fogadott tipp - "+tip);
+					
+					// Ha a kliens jól tippelt, a szerver elküldi az OK szöveget.
 					if (tip == agent.getAgency().getCode()) {
 						sendMessage(socketPw, "OK");
 						String msg = socketSc.nextLine();
@@ -64,23 +72,44 @@ public class ServerRunnable extends BaseRunnable implements Runnable {
 					else {
 						client.close();
 					}
-
-					// client.wait();
+					
 				} catch (SocketTimeoutException ex) {
-//					System.out.println("Időtúllépés, újrapróbálkozás!");
-					ex.printStackTrace();
-				} catch (IOException ex) {
+					System.err.println("Időtúllépés, újrapróbálkozás!");
+				} catch (Exception ex) {
 					ex.printStackTrace();
 				}
 
 				// Játék végének a vizsgálata:
 				if (!agent.isHasAvailableSecrets()) {
-					agent.stopServerThread();
+					isOver = true;
 				}
-//				agent.printSecrets();
+
+				server.close();
+			} catch (Exception ex) {
+				ex.printStackTrace();
 			}
-		} catch (IOException ex) {
-			ex.printStackTrace();
 		}
+	}
+
+	/**
+	 * Szerver generálása véletlen porton:
+	 * 
+	 * @return
+	 */
+	private ServerSocket createServer() {
+		System.out.println("Szerver generálása véletlen porton: ");
+		while (true) {
+			try {
+				return new ServerSocket(RndUtil.generatePort());
+			} catch (IOException ex) {
+				System.err.println("A port foglalt volt...");
+				continue;
+			}
+		}
+	}
+	
+	@Override
+	protected void log(String msg) {
+		System.out.println("Szerver: "+msg);
 	}
 }

@@ -29,6 +29,8 @@ public class Agent {
 	// Szálak:
 	private Thread clientThread;
 	private Thread serverThread;
+	private ClientRunnable clientRunnable;
+	private ServerRunnable serverRunnable;
 
 	public Agent(Agency agency, int agentCode) {
 		rnd = new Random();
@@ -52,35 +54,34 @@ public class Agent {
 		}
 		System.out.println("Titok:\t" + secrets.keySet().toArray()[0]);
 
-		clientThread = new Thread(new ClientRunnable(this));
-		serverThread = new Thread(new ServerRunnable(this));
-
 	}
 
-	public void startClientThread() {
+	/**
+	 * Szálak indítása:
+	 */
+	public void startThreads() {
+		System.out.println(String.format("%d - %d ügynök szerver szál indítása...", agency.getCode(), this.agentCode));
+		serverRunnable = new ServerRunnable(this);
+		serverThread = new Thread(serverRunnable);
+		serverThread.start();;
+		
+		System.out.println(String.format("%d - %d ügynök kliens szál indítása...", agency.getCode(), this.agentCode));
+		clientRunnable = new ClientRunnable(this);
+		clientThread = new Thread(clientRunnable);	
 		clientThread.start();
-		try {
-			clientThread.join();
-		} catch (InterruptedException ex) {
-			System.err.println(String.format("%s. ügynökséghez tartozó %s. kódú ügynök letartóztatva", agency.getCode(), agentCode));
-			System.exit(4);
-		}
 	}
 
-	public void startServerThread() {
-		serverThread.start();
-		try {
-			serverThread.join();
-		} catch (InterruptedException ex) {
-			System.err.println(String.format("%s. ügynökséghez tartozó %s. kódú ügynök letartóztatva", agency.getCode(), agentCode));
-			System.exit(4);
-		}
-	}
-
+	/**
+	 * Az ügynökhöz tartozó fájlnév meghatározása:
+	 * @return
+	 */
 	private String getFileName() {
 		return String.format("agent%d-%d.txt", agency.getCode(), agentCode);
 	}
 
+	/**
+	 * Adatok beolvasása fájlból:
+	 */
 	private void readInformation() {
 		System.out.println("Adatok beolvasás a " + getFileName() + " fájlból!");
 		try (Scanner sc = new Scanner(new File(getFileName()));) {
@@ -94,10 +95,19 @@ public class Agent {
 		}
 	}
 
+	/**
+	 * Véletlenszerű álnév visszaadása:
+	 * @return
+	 */
 	public String getRndName() {
 		return this.names.get(this.rnd.nextInt(this.names.size()));
 	}
 
+	/**
+	 * Véletlenszerű titok visszaadása:
+	 * @param checkValue
+	 * @return
+	 */
 	public String getRndSecret(boolean checkValue) {
 		List<String> secretsList = new ArrayList<>();
 		secretsList.addAll(secrets.keySet());
@@ -117,6 +127,9 @@ public class Agent {
 		}
 	}
 
+	/**
+	 * Titkok megjelentése:
+	 */
 	public void printSecrets() {
 		for (String secret : secrets.keySet()) {
 			System.out.printf("%s ", secret);
@@ -124,14 +137,10 @@ public class Agent {
 		System.out.println();
 	}
 
-	public void stopServerThread() {
-		this.serverThread.interrupt();
-	}
-
-	public void stopClientThread() {
-		this.clientThread.interrupt();
-	}
-
+	
+	/*-----------GETTER/SETTER--------------*/
+	
+	
 	private boolean hasAvailableSecrets() {
 		return this.secrets.containsValue(true);
 	}
@@ -198,5 +207,9 @@ public class Agent {
 
 	public void setHasAvailableSecrets(boolean hasAvailableSecrets) {
 		this.hasAvailableSecrets = hasAvailableSecrets;
+	}
+	
+	public ServerRunnable getServerRunnable() {
+		return this.serverRunnable;
 	}
 }
