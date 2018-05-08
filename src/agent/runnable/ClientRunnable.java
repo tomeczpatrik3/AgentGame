@@ -89,28 +89,36 @@ public class ClientRunnable extends BaseRunnable implements Runnable {
 								// A másik ügynökségben dolgozó ügynökök
 								// számának
 								// lekérdezése:
+								log("Másik ügynökségben dolgozó ügynökök számának lekérdezése");
 								int otherAgents = Integer.parseInt(socketSc.nextLine());
 								List<Integer> agentCodeTips;
 								// Ha már tippeltünk erre a szerverre:
 								if (agent.getGuessedNumbers().containsKey(clientPort)) {
+									log("Már tippeltünk erre az ügynökre");
 									agentCodeTips = agent.getGuessedNumbers().get(clientPort);
 									// Ha már tudjuk a kódját:
 									if (agent.getFinalNumbers().containsKey(clientPort)) {
+										log("Tudjuk már a kódját - "+agent.getFinalNumbers().get(clientPort));
 										sendMessage(socketPw, agent.getFinalNumbers().get(clientPort));
 									}
 									// Ha még nem:
 									else {
+										log("Még nem tudjuk a kódját");
 										agentCodeTip = rnd.nextInt(otherAgents);
 										while (!agentCodeTips.contains(agentCodeTip)) {
 											agentCodeTip = rnd.nextInt(otherAgents);
 										}
 										agentCodeTips.add(agentCodeTip);
 										agent.getGuessedNumbers().put(clientPort, agentCodeTips);
+										log("A tippünk - "+agentCodeTip);
 										sendMessage(socketPw, agentCodeTip);
 									}
+								//Ha még nem tippeltünk erre a szerverre:
 								} else {
+									log("Még nem tippeltünk erre az ügynökre");
 									agentCodeTip = rnd.nextInt(otherAgents);
 									agent.getGuessedNumbers().put(clientPort, Arrays.asList(agentCodeTip));
+									log("A tippünk - "+agentCodeTip);
 									sendMessage(socketPw, agentCodeTip);
 								}
 								// Ha helyesen tippeltünk:

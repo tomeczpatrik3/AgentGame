@@ -48,36 +48,47 @@ public class ServerRunnable extends BaseRunnable implements Runnable {
 					
 					// Ha a kliens jól tippelt, a szerver elküldi az OK szöveget.
 					if (tip == agent.getAgency().getCode()) {
+						log("A kliens jól tippelt");
 						sendMessage(socketPw, "OK");
 						String msg = socketSc.nextLine();
 						// Ha különböző ügynökséghez tartoznak:
 						if (msg.equals("???")) {
+							log("Különböző ügynökséghez tartoznak");
 							// Ügynökségen dolgozó ügynökök számának
 							// elküldése:
+							log("Az ügynökségen dolgozó ügynökök számának elküldése");
 							sendMessage(socketPw, agent.getAgency().getAgentsNumber());
 							int guessedAgentCode = Integer.parseInt(socketSc.nextLine());
+							log("A kliens által tippelt ügynök azonosító - " +guessedAgentCode);
 							// Ha helyes volt a tipp:
 							if (agent.getAgentCode() == guessedAgentCode) {
+								log("Helyes tipp, titok küldése");
 								sendMessage(socketPw, agent.getRndSecret(true));
 							}
 							// Ha nem:
 							else {
+								log("Helytelen tipp, kapcsolat bontása");
 								client.close();
 							}
 						}
 						// Ha azonos ugynökséghez tartoznak:
 						else {
+							log("Azonos ügynökséghez tartoznak");
 							// Fogadja a secretet:
+							log("Titok fogadása - "+msg);
 							agent.getSecrets().put(msg, true);
 							// Elküld egy véletlen secret-et:
+							log("Véletlen titok elküldése");
 							sendMessage(socketPw, agent.getRndSecret(false));
 							// Bontja a kapcsolatot:
+							log("Kapcsolat bontása");
 							client.close();
 						}
 					}
 					// Ha a kliens tévedett, akkor a szerver bontja a
 					// kapcsolatot.
 					else {
+						log("Helytelen tipp, kapcsolat bontása");
 						client.close();
 					}
 					

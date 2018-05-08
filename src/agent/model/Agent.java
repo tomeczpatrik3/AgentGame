@@ -29,8 +29,6 @@ public class Agent {
 	// Szálak:
 	private Thread clientThread;
 	private Thread serverThread;
-	private ClientRunnable clientRunnable;
-	private ServerRunnable serverRunnable;
 	
 	//Teszteléshez:
 	private int serverPort, clientPort;
@@ -85,21 +83,33 @@ public class Agent {
 		}
 		System.out.println("Titkok:");
 		printSecrets();
+		
+		serverThread = new Thread(new ServerRunnable(this));
+		clientThread = new Thread(new ClientRunnable(this));
 	}
 
 	/**
 	 * Szálak indítása:
 	 */
 	public void startThreads() {
-		System.out.println(String.format("%d - %d ügynök szerver szál indítása...", agency.getCode(), this.agentCode));
-		serverRunnable = new ServerRunnable(this);
-		serverThread = new Thread(serverRunnable);
-		serverThread.start();;
-		
+		startServerThread();
+		startClientThread();
+	}
+	
+	/**
+	 * Kliens szál indítása:
+	 */
+	public void startClientThread() {
 		System.out.println(String.format("%d - %d ügynök kliens szál indítása...", agency.getCode(), this.agentCode));
-		clientRunnable = new ClientRunnable(this);
-		clientThread = new Thread(clientRunnable);	
-		clientThread.start();
+		clientThread.start();		
+	}
+	
+	/**
+	 * Szerver szál indítása:
+	 */
+	public void startServerThread() {
+		System.out.println(String.format("%d - %d ügynök szerver szál indítása...", agency.getCode(), this.agentCode));
+		serverThread.start();		
 	}
 
 	/**
@@ -238,10 +248,6 @@ public class Agent {
 
 	public void setHasAvailableSecrets(boolean hasAvailableSecrets) {
 		this.hasAvailableSecrets = hasAvailableSecrets;
-	}
-	
-	public ServerRunnable getServerRunnable() {
-		return this.serverRunnable;
 	}
 
 	public int getServerPort() {
