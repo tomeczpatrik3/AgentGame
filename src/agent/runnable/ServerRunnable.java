@@ -34,12 +34,12 @@ public class ServerRunnable extends BaseRunnable implements Runnable {
 				server.setSoTimeout(Constants.MAX_TIMEOUT);
 				
 				try (Socket client = server.accept(); Scanner socketSc = new Scanner(client.getInputStream()); PrintWriter socketPw = new PrintWriter(client.getOutputStream());) {
-					System.out.println("Szerver: Sikeresen kapcsolodott egy kliens!");
+					log("Sikeresen kapcsolodott egy kliens!");
 					
 					// <----- PROTOKOL ----->
 					// A szerver elküldi az álnevei közül az egyiket
 					// véletlenszerűen.
-					System.out.println("Szerver: Véletlen név elküldése!");
+					log("Véletlen név elküldése!");
 					sendMessage(socketPw, agent.getRndName());
 
 					//Tipp fogadása:
@@ -99,7 +99,7 @@ public class ServerRunnable extends BaseRunnable implements Runnable {
 				}
 
 				// Játék végének a vizsgálata:
-				if (!agent.isHasAvailableSecrets()) {
+				if (!agent.hasAvailableSecrets()) {
 					isOver = true;
 				}
 
@@ -129,6 +129,6 @@ public class ServerRunnable extends BaseRunnable implements Runnable {
 	
 	@Override
 	protected void log(String msg) {
-		System.out.println("Szerver: "+msg);
+		System.out.println(String.format("Szerver (%d - %d): %s", agent.getAgency().getCode(), agent.getAgentCode(), msg));
 	}
 }

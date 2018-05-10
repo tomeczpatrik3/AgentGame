@@ -4,11 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Agency {
+	public static int agencyCount = 0;
+	
 	private String name;
 	private int code;
 	private List<Agent> agents;
 	
 	public Agency(String name, int code) {
+		agencyCount++;
+		
 		this.name = name;
 		this.code = code;
 		this.agents = new ArrayList<>();

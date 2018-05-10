@@ -19,12 +19,11 @@ public class Agent {
 	// Adott ügynök adatai:
 	private Agency agency;
 	private int agentCode;
-	private boolean hasAvailableSecrets;
+	
 	private List<String> names;
-	private Map<String, Integer> badTips;
 	private Map<String, Boolean> secrets;
-	private Map<Integer, List<Integer>> guessedNumbers;
-	private Map<Integer, Integer> finalNumbers;
+	private Map<String, Map<Integer, Boolean>> agencyCodeTips;
+	private Map<String, Map<Integer, Boolean>> agentCodeTips;
 
 	// Szálak:
 	private Thread clientThread;
@@ -63,15 +62,12 @@ public class Agent {
 	 */
 	private void initalizeAgent(Agency agency, int agentCode) {
 		rnd = new Random();
-		badTips = new HashMap<>();
+		agencyCodeTips = new HashMap<>();
 		secrets = new HashMap<>();
-		guessedNumbers = new HashMap<>();
-		setFinalNumbers(new HashMap<>());
+		agentCodeTips = new HashMap<>();
 
 		this.agency = agency;
 		this.agentCode = agentCode;
-
-		this.setHasAvailableSecrets(true);
 
 		System.out.println(String.format("\n%s. ügynökséghez tartozó %d. ügynök adatai:", agency.getName(), agentCode));
 
@@ -153,7 +149,7 @@ public class Agent {
 		List<String> secretsList = new ArrayList<>();
 		secretsList.addAll(secrets.keySet());
 
-		if (checkValue) {
+		if (!checkValue) {
 			return secretsList.get(this.rnd.nextInt(secretsList.size()));
 		} else {
 			String tempSecret = secretsList.get(this.rnd.nextInt(secretsList.size()));
@@ -161,9 +157,7 @@ public class Agent {
 				tempSecret = secretsList.get(this.rnd.nextInt(secretsList.size()));
 			}
 			secrets.put(tempSecret, false);
-			if (!hasAvailableSecrets()) {
-				setHasAvailableSecrets(false);
-			}
+
 			return tempSecret;
 		}
 	}
@@ -177,83 +171,113 @@ public class Agent {
 		}
 		System.out.println();
 	}
+	
+	/**
+	 * Ellenőrzi, hogy van-e olyan titok amit még nem árultunk el
+	 * @return
+	 */
+	public boolean hasAvailableSecrets() {
+		return this.secrets.containsValue(true);
+	}
 
+	/**
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public boolean hasCorrectAgencyTipForName(String name) {
+		boolean hasCorrectTip = false;
+		for (int agencyCode: agencyCodeTips.get(name).keySet()) {
+			if (agencyCodeTips.get(name).get(agencyCode) == true) {
+				hasCorrectTip = true;
+				break;
+			}
+		}
+		return hasCorrectTip;
+	}
+	
+	/**
+	 * A helyes ügynökségkódot meghatározó függvény
+	 * (ELŐBB: hasCorrectTipForName függvénnyel ellenőrzés)
+	 * @param name
+	 * @return
+	 */
+	public int getCorrectAgencyTipForName(String name) {
+		int tip = 0;
+		for (int agencyCode: agencyCodeTips.get(name).keySet()) {
+			if (agencyCodeTips.get(name).get(agencyCode) == true) {
+				tip = agencyCode;
+			}
+		}
+		return tip;
+	}
+	
+	public boolean hasCorrectAgentCodeTipForName(String name) {
+		boolean hasCorrectTip = false;
+		for (int agentCode: agentCodeTips.get(name).keySet()) {
+			if (agentCodeTips.get(name).get(agentCode) == true) {
+				hasCorrectTip = true;
+				break;
+			}
+		}
+		return hasCorrectTip;		
+	}
+	
+	public int getCorrectAgentCodeTipForName(String name) {
+		int tip = 0;
+		for (int agentCode: agentCodeTips.get(name).keySet()) {
+			if (agentCodeTips.get(name).get(agentCode) == true) {
+				tip = agentCode;
+			}
+		}
+		return tip;
+	}
+	
+	public void logInformations() {
+		String logInfo = "#################LOG#################\n" +
+		String.format("%d ügynökség - %d ügynök ", agency.getCode(), agentCode) +
+		"\n Titkok:";
+		System.out.println(logInfo);
+		secrets.keySet().stream().forEach(secret -> System.out.println(secret));
+	}
 	
 	/*-----------GETTERS & SETTERS--------------*/
-	
-	
-	private boolean hasAvailableSecrets() {
-		return this.secrets.containsValue(true);
+	public Agency getAgency() {
+		return agency;
 	}
 
 	public int getAgentCode() {
 		return agentCode;
 	}
 
-	public void setAgentCode(int agentCode) {
-		this.agentCode = agentCode;
-	}
-
 	public List<String> getNames() {
 		return names;
-	}
-
-	public void setNames(List<String> names) {
-		this.names = names;
-	}
-
-	public Map<String, Integer> getBadTips() {
-		return badTips;
-	}
-
-	public void setBadTips(Map<String, Integer> badTips) {
-		this.badTips = badTips;
 	}
 
 	public Map<String, Boolean> getSecrets() {
 		return secrets;
 	}
-
-	public void setSecrets(Map<String, Boolean> secrets) {
-		this.secrets = secrets;
+	
+	public Map<String, Map<Integer, Boolean>> getAgencyCodeTips() {
+		return agencyCodeTips;
 	}
 
-	public Map<Integer, List<Integer>> getGuessedNumbers() {
-		return guessedNumbers;
+	public Map<String, Map<Integer, Boolean>> getAgentCodeTips() {
+		return agentCodeTips;
 	}
 
-	public void setGuessedNumbers(Map<Integer, List<Integer>> guessedNumbers) {
-		this.guessedNumbers = guessedNumbers;
+	public Thread getClientThread() {
+		return clientThread;
 	}
 
-	public Agency getAgency() {
-		return agency;
-	}
-
-	public void setAgency(Agency agency) {
-		this.agency = agency;
-	}
-
-	public Map<Integer, Integer> getFinalNumbers() {
-		return finalNumbers;
-	}
-
-	public void setFinalNumbers(Map<Integer, Integer> finalNumbers) {
-		this.finalNumbers = finalNumbers;
-	}
-
-	public boolean isHasAvailableSecrets() {
-		return hasAvailableSecrets;
-	}
-
-	public void setHasAvailableSecrets(boolean hasAvailableSecrets) {
-		this.hasAvailableSecrets = hasAvailableSecrets;
+	public Thread getServerThread() {
+		return serverThread;
 	}
 
 	public int getServerPort() {
 		return serverPort;
 	}
-
+	
 	public int getClientPort() {
 		return clientPort;
 	}
