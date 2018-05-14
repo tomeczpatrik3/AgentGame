@@ -14,12 +14,11 @@ import agent.util.RndUtil;
 public class ServerRunnable extends BaseRunnable implements Runnable {
 	public ServerRunnable(Agent agent) {
 		super(agent);
-		isOver = false;
 	}
 
 	@Override
 	public void run() {
-		while (!isOver) {
+		while (agent.hasAvailableSecrets() && !agent.getAgency().isGameOver) {
 			try {
 				ServerSocket server;
 				//Ha tesztelünk:
@@ -31,6 +30,9 @@ public class ServerRunnable extends BaseRunnable implements Runnable {
 				else {
 					server = createServer();
 				}
+				
+				agent.setServerPort(server.getLocalPort());
+				
 				server.setSoTimeout(Constants.MAX_TIMEOUT);
 				
 				try (Socket client = server.accept(); Scanner socketSc = new Scanner(client.getInputStream()); PrintWriter socketPw = new PrintWriter(client.getOutputStream());) {
@@ -93,15 +95,10 @@ public class ServerRunnable extends BaseRunnable implements Runnable {
 					}
 					
 				} catch (SocketTimeoutException ex) {
-					System.err.println("Időtúllépés, újrapróbálkozás!");
+					//System.err.println("Időtúllépés, újrapróbálkozás!");
 				} catch (Exception ex) {
-					ex.printStackTrace();
-				}
-
-				// Játék végének a vizsgálata:
-				if (!agent.hasAvailableSecrets()) {
-					isOver = true;
-				}
+					//Ha valami más történt
+				} 
 
 				server.close();
 			} catch (Exception ex) {
@@ -117,14 +114,15 @@ public class ServerRunnable extends BaseRunnable implements Runnable {
 	 */
 	private ServerSocket createServer() {
 		System.out.println("Szerver generálása véletlen porton: ");
-		while (true) {
+		while (!agent.getAgency().isGameOver) {
 			try {
-				return new ServerSocket(RndUtil.generatePort());
+				return new ServerSocket(RndUtil.generatePort(agent.getClientPort()));
 			} catch (IOException ex) {
-				System.err.println("A port foglalt volt...");
+				//System.err.println("A port foglalt volt...");
 				continue;
 			}
 		}
+		return null;
 	}
 	
 	@Override

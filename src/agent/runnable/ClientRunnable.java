@@ -4,9 +4,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.ConnectException;
 import java.net.Socket;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.Set;
@@ -28,7 +26,7 @@ public class ClientRunnable extends BaseRunnable implements Runnable {
 	public void run() {
 		Socket client;
 
-		while (!isOver) {
+		while (agent.hasAvailableSecrets() && !agent.getAgency().isGameOver) {
 			try {
 				// Ha tesztelünk:
 				if (agent.isTestMode()) {
@@ -38,6 +36,9 @@ public class ClientRunnable extends BaseRunnable implements Runnable {
 				// Ha nem:
 				else
 					client = createSocket();
+				
+				agent.setClientPort(client.getLocalPort());
+				
 				try (Scanner socketSc = new Scanner(client.getInputStream()); PrintWriter socketPw = new PrintWriter(client.getOutputStream());) {
 					log("Sikeres kapcsolodas a szervehez!");
 
@@ -60,100 +61,36 @@ public class ClientRunnable extends BaseRunnable implements Runnable {
 						
 						// Ha azonos ügynökséghez tartoznak:
 						if (agencyCodeTip == agent.getAgency().getCode()) {
-							log("Azonos ügynökséghez tartoznak");
-							// Véletlen secret küldése:
-							log("Véletlen titok elküldése");
-							sendMessage(socketPw, agent.getRndSecret(false));
-							// Secret fogadása és mentése:
-							log("Titok fogadása és mentése");
-							agent.getSecrets().put(socketSc.nextLine(), true);
-							// Kapcsolat zárása:
-							log("Kapcsolat bontása");
-							client.close();
+							onSameAgency(socketPw, socketSc);
 						}
 
 						// Ha nem azonos ügynökséghez tartoznak:
 						else {
-							log("Különböző ügynökséghez tartoznak");
-							sendMessage(socketPw, "???");
-							int agentCodeTip;
-							// A másik ügynökségben dolgozó ügynökök
-							// számának
-							// lekérdezése:
-							log("Másik ügynökségben dolgozó ügynökök számának lekérdezése");
-							int otherAgents = Integer.parseInt(socketSc.nextLine());
-							List<Integer> agentCodeTips;
-							// Ha már tippeltünk erre a névre:
-							if (agent.getAgentCodeTips().containsKey(name)) {
-								log("Már tippeltünk erre az névre");
-								// Ha már tudjuk a kódját:
-								if (agent.hasCorrectAgentCodeTipForName(name)) {
-									agentCodeTip = agent.getCorrectAgentCodeTipForName(name);
-									log("Tudjuk már a kódját - " + agentCodeTip);
-									sendMessage(socketPw, agentCodeTip);
-								}
-								// Ha még nem tudjuk a kódját:
-								else {
-									log("Még nem tudjuk a kódját");
-									Set<Integer> badTips = agent.getAgentCodeTips().get(name).keySet();
-									
-									agentCodeTip = rnd.nextInt(otherAgents)+1;
-									while (badTips.contains(agentCodeTip)) {
-										agentCodeTip = rnd.nextInt(otherAgents)+1;
-									}
-									
-									agent.getAgentCodeTips().get(name).put(agentCodeTip, false);
-									
-									log("A tippünk - " + agentCodeTip);
-									sendMessage(socketPw, agentCodeTip);
-								}
-							
-							// Ha még nem tippeltünk erre a névre:
-							} else {
-								log("Még nem tippeltünk erre az névre");
-								agent.getAgentCodeTips().put(name, new HashMap<Integer, Boolean>());
-								agentCodeTip = rnd.nextInt(otherAgents)+1;
-								log("A tippünk - " + agentCodeTip);
-								agent.getAgentCodeTips().get(name).put(agentCodeTip, false);
-								
-								sendMessage(socketPw, agentCodeTip);
-							}
-
-							// Ha helyesen tippeltünk:
-							if (!agent.hasCorrectAgentCodeTipForName(name)) {
-								log("Még nem volt helyes tipp erre a névre, ezért eltároljuk");
-								agent.getAgentCodeTips().get(name).put(agentCodeTip, true);
-							}
-							
-							if (socketSc.hasNextLine()) {
-								log("Eltároljuk a kapott titkot");
-								agent.getSecrets().put(socketSc.nextLine(), true);
-							}
+							onDifferentAgencies(name, socketPw, socketSc);
 						}
 					}
 				} catch (IOException ex) {
 					ex.printStackTrace();
 				}
 
-				// Játék végének a vizsgálata:
-				if (!agent.hasAvailableSecrets()) {
-					isOver = true;
-				}
-
+				client.close();
 				sleepRandomTime();
 			//Ha a szerver, amire csatlakozni szeretnénk már nem él
 			} catch (ConnectException ex) {
-				System.err.println("A szerver, amire csatlakozni szeretnénk már nem él!");
+				//System.err.println("A szerver, amire csatlakozni szeretnénk már nem él!");
 			} catch (IOException ex) {
 				// Ha roszul tippeltünk az ügynökségre:
 				log("Helytelen tipp az ügynökségre");
 				sleepRandomTime();
+			} catch (Exception ex) {
+				//Ha valami más történt:
 			}
-			
-			//agent.logInformations();
 		}
 	}
 
+	/**
+	 * Alvás véletlen hosszú ideig:
+	 */
 	public void sleepRandomTime() {
 		System.out.println("Alvás véletlen hosszú ideig...");
 		try {
@@ -170,16 +107,22 @@ public class ClientRunnable extends BaseRunnable implements Runnable {
 	 */
 	private Socket createSocket() {
 		System.out.println("Kliens generálása véletlen porton: ");
-		while (true) {
+		while (!agent.getAgency().isGameOver) {
 			try {
-				return new Socket(Constants.ADRESS, RndUtil.generatePort());
+				return new Socket(Constants.ADRESS, RndUtil.generatePort(agent.getServerPort()));
 			} catch (IOException ex) {
-				System.err.println("A port foglalt volt...");
+				//System.err.println("A port foglalt volt...");
 				continue;
 			}
 		}
+		return null;
 	}
-
+	
+	/**
+	 * Az ügynökség kódjának "tippelését" megvalósító függvény:
+	 * @param name
+	 * @return
+	 */
 	private int guessAgencyCode(String name) {
 		int agencyCodeTip;
 		// Ha tippeltünk már erre a névre:
@@ -209,6 +152,97 @@ public class ClientRunnable extends BaseRunnable implements Runnable {
 		}
 		return agencyCodeTip;
 	}
+	
+	/**
+	 * Az ügynök kódjának "tippelését" megvalósító függvény:
+	 * @param name
+	 * @param otherAgents
+	 * @return
+	 */
+	private int guessAgentCode(String name, int otherAgents) {
+		int agentCodeTip;
+		// Ha már tippeltünk erre a névre:
+		if (agent.getAgentCodeTips().containsKey(name)) {
+			log("Már tippeltünk erre az névre");
+			// Ha már tudjuk a kódját:
+			if (agent.hasCorrectAgentCodeTipForName(name)) {
+				agentCodeTip = agent.getCorrectAgentCodeTipForName(name);
+				log("Tudjuk már a kódját - " + agentCodeTip);
+			}
+			// Ha még nem tudjuk a kódját:
+			else {
+				log("Még nem tudjuk a kódját");
+				Set<Integer> badTips = agent.getAgentCodeTips().get(name).keySet();
+				
+				agentCodeTip = rnd.nextInt(otherAgents)+1;
+				while (badTips.contains(agentCodeTip)) {
+					agentCodeTip = rnd.nextInt(otherAgents)+1;
+				}
+				
+				agent.getAgentCodeTips().get(name).put(agentCodeTip, false);
+				
+				log("A tippünk - " + agentCodeTip);
+			}
+		
+		// Ha még nem tippeltünk erre a névre:
+		} else {
+			log("Még nem tippeltünk erre az névre");
+			agent.getAgentCodeTips().put(name, new HashMap<Integer, Boolean>());
+			agentCodeTip = rnd.nextInt(otherAgents)+1;
+			log("A tippünk - " + agentCodeTip);
+			agent.getAgentCodeTips().get(name).put(agentCodeTip, false);
+		}
+		
+		return agentCodeTip;
+	}
+	
+	/**
+	 * Ha azonos ügynökséghez tartoznak:
+	 * @param socketPw
+	 * @param socketSc
+	 */
+	private void onSameAgency(PrintWriter socketPw, Scanner socketSc) {
+		log("Azonos ügynökséghez tartoznak");
+		// Véletlen secret küldése:
+		log("Véletlen titok elküldése");
+		sendMessage(socketPw, agent.getRndSecret(false));
+		// Secret fogadása és mentése:
+		log("Titok fogadása és mentése");
+		agent.getSecrets().put(socketSc.nextLine(), true);
+		// Kapcsolat zárása:
+		log("Kapcsolat bontása");		
+	}
+	
+	/**
+	 * Ha különböző ügynökséghez tartoznak:
+	 * @param name
+	 * @param socketPw
+	 * @param socketSc
+	 */
+	private void onDifferentAgencies(String name, PrintWriter socketPw, Scanner socketSc) {
+		log("Különböző ügynökséghez tartoznak");
+		sendMessage(socketPw, "???");
+		
+		// A másik ügynökségben dolgozó ügynökök
+		// számának lekérdezése:
+		log("Másik ügynökségben dolgozó ügynökök számának lekérdezése");
+		int otherAgents = Integer.parseInt(socketSc.nextLine());
+
+		int agentCodeTip = guessAgentCode(name, otherAgents);
+		sendMessage(socketPw, agentCodeTip);
+
+		if (socketSc.hasNextLine()) {
+			log("Eltároljuk a kapott titkot");
+			agent.getSecrets().put(socketSc.nextLine(), true);
+			
+			// Ha még nem volt eltárolva a helyes tipp:
+			if (!agent.hasCorrectAgentCodeTipForName(name)) {
+				log("Még nem volt helyes tipp erre a névre, ezért eltároljuk");
+				agent.getAgentCodeTips().get(name).put(agentCodeTip, true);
+			}
+		}		
+	}
+	
 
 	@Override
 	protected void log(String msg) {

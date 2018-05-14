@@ -19,6 +19,8 @@ public class Agent {
 	// Adott ügynök adatai:
 	private Agency agency;
 	private int agentCode;
+	private boolean isCaptive;
+	private int serverPort, clientPort;
 	
 	private List<String> names;
 	private Map<String, Boolean> secrets;
@@ -30,7 +32,6 @@ public class Agent {
 	private Thread serverThread;
 	
 	//Teszteléshez:
-	private int serverPort, clientPort;
 	private boolean testMode;
 
 	/**
@@ -68,10 +69,13 @@ public class Agent {
 
 		this.agency = agency;
 		this.agentCode = agentCode;
+		this.isCaptive = false;
 
 		System.out.println(String.format("\n%s. ügynökséghez tartozó %d. ügynök adatai:", agency.getName(), agentCode));
 
 		readInformation();
+		
+		agency.addScerets(secrets.keySet());
 
 		System.out.println("Álnevek: ");
 		for (int i = 0; i < names.size(); i++) {
@@ -124,7 +128,9 @@ public class Agent {
 		try (Scanner sc = new Scanner(new File(getFileName()));) {
 
 			this.names = Arrays.asList(sc.nextLine().split(" "));
-			this.secrets.put(sc.nextLine(), true);
+			String[] scretsWords = sc.nextLine().split(" ");
+			for (String secretWord: scretsWords)
+				this.secrets.put(secretWord, true);
 
 		} catch (FileNotFoundException e) {
 			System.err.println(String.format("Nem létező fájl (%s)", getFileName()));
@@ -284,5 +290,25 @@ public class Agent {
 
 	public boolean isTestMode() {
 		return testMode;
+	}
+	
+	public boolean isCaptive() {
+		return isCaptive;
+	}
+	
+	/**
+	 * A függvény, amellyel lekérdezhető, hogy tevékenykedik-e még a szerver oldal:
+	 * @return
+	 */
+	public boolean isJailed() {
+		return !hasAvailableSecrets();
+	}
+
+	public void setServerPort(int serverPort) {
+		this.serverPort = serverPort;
+	}
+
+	public void setClientPort(int clientPort) {
+		this.clientPort = clientPort;
 	}
 }
