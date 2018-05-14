@@ -50,8 +50,8 @@ public class AgentMain {
 			}
 			
 			//Hogy minden szál szabályosan álljon le:
-			aAgency.isGameOver = true;
-			bAgency.isGameOver = true;
+			aAgency.setGameOver(true);
+			bAgency.setGameOver(true);
 			
 			//Információk logolása:
 			aAgency.log();

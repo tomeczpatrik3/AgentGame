@@ -16,23 +16,28 @@ import agent.runnable.ServerRunnable;
 public class Agent {
 	private Random rnd;
 
-	// Adott ügynök adatai:
+	/*Az ügynökség*/
 	private Agency agency;
+	/*Az ügynök azonosítója*/
 	private int agentCode;
-	private boolean isCaptive;
+	/*A szerver és kliens portok*/
 	private int serverPort, clientPort;
 	
+	/*Az ügynök álnevei*/
 	private List<String> names;
+	/*Az ügynökhöz tartozó titkok, és hogy elárulta-e már
+	 *True: 	még nem árulta el 
+	 *False: 	már elárulta valakinek
+	 **/
 	private Map<String, Boolean> secrets;
+	/*Az egyes nevekhez tartozó ügynökség azonosító tippek*/
 	private Map<String, Map<Integer, Boolean>> agencyCodeTips;
+	/*Az egyes nevekhez tartozó ügynök azonosító tippek*/
 	private Map<String, Map<Integer, Boolean>> agentCodeTips;
 
 	// Szálak:
 	private Thread clientThread;
 	private Thread serverThread;
-	
-	//Teszteléshez:
-	private boolean testMode;
 
 	/**
 	 * Az alapesetben használt konstruktor:
@@ -43,19 +48,6 @@ public class Agent {
 		initalizeAgent(agency, agentCode);
 		this.serverPort = -1;
 		this.clientPort = -1;
-		this.testMode = false;
-	}
-	
-	/**
-	 * A teszteléshez használt konstruktor:
-	 * @param agency
-	 * @param agentCode
-	 */
-	public Agent(Agency agency, int agentCode, int serverPort, int clientPort) {
-		initalizeAgent(agency, agentCode);
-		this.serverPort = serverPort;
-		this.clientPort = clientPort;
-		this.testMode = true;
 	}
 	
 	/**
@@ -69,7 +61,6 @@ public class Agent {
 
 		this.agency = agency;
 		this.agentCode = agentCode;
-		this.isCaptive = false;
 
 		System.out.println(String.format("\n%s. ügynökséghez tartozó %d. ügynök adatai:", agency.getName(), agentCode));
 
@@ -121,7 +112,7 @@ public class Agent {
 	}
 
 	/**
-	 * Adatok beolvasása fájlból:
+	 * Adatok beolvasása és tárolása:
 	 */
 	private void readInformation() {
 		System.out.println("Adatok beolvasás a " + getFileName() + " fájlból!");
@@ -139,23 +130,23 @@ public class Agent {
 	}
 
 	/**
-	 * Véletlenszerű álnév visszaadása:
-	 * @return
+	 * Véletlenszerű álnév kiválasztása:
+	 * @return A kiválasztott álnév
 	 */
 	public String getRndName() {
 		return this.names.get(this.rnd.nextInt(this.names.size()));
 	}
 
 	/**
-	 * Véletlenszerű titok visszaadása:
-	 * @param checkValue
-	 * @return
+	 * Véletlenszerű titok kiválasztása:
+	 * @param checkIfUntold Ellenőrizzük-e hogy továbbadtuk-e már egy másik ügynökségnek
+	 * @return A kiválasztott titok
 	 */
-	public String getRndSecret(boolean checkValue) {
+	public String getRndSecret(boolean checkIfUntold) {
 		List<String> secretsList = new ArrayList<>();
 		secretsList.addAll(secrets.keySet());
 
-		if (!checkValue) {
+		if (!checkIfUntold) {
 			return secretsList.get(this.rnd.nextInt(secretsList.size()));
 		} else {
 			String tempSecret = secretsList.get(this.rnd.nextInt(secretsList.size()));
@@ -169,7 +160,7 @@ public class Agent {
 	}
 
 	/**
-	 * Titkok megjelentése:
+	 * Titkok megjelenítése:
 	 */
 	public void printSecrets() {
 		for (String secret : secrets.keySet()) {
@@ -179,16 +170,17 @@ public class Agent {
 	}
 	
 	/**
-	 * Ellenőrzi, hogy van-e olyan titok amit még nem árultunk el
-	 * @return
+	 * A függvény amely ellenőrzi, hogy van-e olyan titok amit még nem árultunk el
+	 * @return Igaz ha van, hamis ha nincs
 	 */
 	public boolean hasAvailableSecrets() {
 		return this.secrets.containsValue(true);
 	}
 
 	/**
-	 * 
-	 * @param name
+	 * A függvény amely ellenőrzi, hogy van-e helyes tippünk
+	 * a névhez tartozó ügynökség azonosítóra
+	 * @param name A név
 	 * @return
 	 */
 	public boolean hasCorrectAgencyTipForName(String name) {
@@ -203,9 +195,9 @@ public class Agent {
 	}
 	
 	/**
-	 * A helyes ügynökségkódot meghatározó függvény
-	 * (ELŐBB: hasCorrectTipForName függvénnyel ellenőrzés)
-	 * @param name
+	 * Az adott névhez tartozó helyes ügynökség azonosítót meghatározó függvény
+	 * (ELŐBB: hasCorrectAgencyTipForName függvénnyel ellenőrzés)
+	 * @param name A név
 	 * @return
 	 */
 	public int getCorrectAgencyTipForName(String name) {
@@ -218,6 +210,12 @@ public class Agent {
 		return tip;
 	}
 	
+	/**
+	 * A függvény amely ellenőrzi, hogy van-e helyes tippünk
+	 * a névhez tartozó ügynök azonosítóra
+	 * @param name A név
+	 * @return
+	 */	
 	public boolean hasCorrectAgentCodeTipForName(String name) {
 		boolean hasCorrectTip = false;
 		for (int agentCode: agentCodeTips.get(name).keySet()) {
@@ -229,6 +227,12 @@ public class Agent {
 		return hasCorrectTip;		
 	}
 	
+	/**
+	 * Az adott névhez tartozó helyes ügynök azonosítót meghatározó függvény
+	 * (ELŐBB: hasCorrectAgentCodeTipForName függvénnyel ellenőrzés)
+	 * @param name A név
+	 * @return
+	 */
 	public int getCorrectAgentCodeTipForName(String name) {
 		int tip = 0;
 		for (int agentCode: agentCodeTips.get(name).keySet()) {
@@ -239,12 +243,12 @@ public class Agent {
 		return tip;
 	}
 	
-	public void logInformations() {
-		String logInfo = "#################LOG#################\n" +
-		String.format("%d ügynökség - %d ügynök ", agency.getCode(), agentCode) +
-		"\n Titkok:";
-		System.out.println(logInfo);
-		secrets.keySet().stream().forEach(secret -> System.out.println(secret));
+	/**
+	 * A függvény, amellyel lekérdezhető, hogy tevékenykedik-e még az ügynök:
+	 * @return
+	 */
+	public boolean isJailed() {
+		return !hasAvailableSecrets();
 	}
 	
 	/*-----------GETTERS & SETTERS--------------*/
@@ -286,22 +290,6 @@ public class Agent {
 	
 	public int getClientPort() {
 		return clientPort;
-	}
-
-	public boolean isTestMode() {
-		return testMode;
-	}
-	
-	public boolean isCaptive() {
-		return isCaptive;
-	}
-	
-	/**
-	 * A függvény, amellyel lekérdezhető, hogy tevékenykedik-e még a szerver oldal:
-	 * @return
-	 */
-	public boolean isJailed() {
-		return !hasAvailableSecrets();
 	}
 
 	public void setServerPort(int serverPort) {

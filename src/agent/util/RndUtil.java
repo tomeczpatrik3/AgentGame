@@ -9,7 +9,7 @@ public class RndUtil {
 
 	/**
 	 * Véletlenszerű port generálása:
-	 * @return
+	 * @return A generált port
 	 */
 	public static int generatePort() {
 		rnd = new Random();
@@ -17,9 +17,9 @@ public class RndUtil {
 	}
 	
 	/**
-	 * Véletlenszerű, a megadott porttól különbpző port generálása:
-	 * @param port
-	 * @return
+	 * Véletlenszerű, a megadott porttól különböző port generálása:
+	 * @param port A port, amit nem szeretnénk generálni
+	 * @return A generált port
 	 */
 	public static int generatePort(int port) {
 		rnd = new Random();
@@ -32,7 +32,7 @@ public class RndUtil {
 
 	/**
 	 * Véletlenszerű timeout generálása:
-	 * @return
+	 * @return A generált timeout
 	 */
 	public static int generateTimeout() {
 		rnd = new Random();

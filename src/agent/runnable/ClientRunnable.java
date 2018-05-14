@@ -26,17 +26,9 @@ public class ClientRunnable extends BaseRunnable implements Runnable {
 	public void run() {
 		Socket client;
 
-		while (agent.hasAvailableSecrets() && !agent.getAgency().isGameOver) {
+		while (agent.hasAvailableSecrets() && !agent.getAgency().isGameOver()) {
 			try {
-				// Ha tesztelünk:
-				if (agent.isTestMode()) {
-					log("----- TESZT MÓD -----");
-					client = new Socket(Constants.ADRESS, agent.getClientPort());
-				}
-				// Ha nem:
-				else
-					client = createSocket();
-				
+				client = createSocket();
 				agent.setClientPort(client.getLocalPort());
 				
 				try (Scanner socketSc = new Scanner(client.getInputStream()); PrintWriter socketPw = new PrintWriter(client.getOutputStream());) {
@@ -102,12 +94,11 @@ public class ClientRunnable extends BaseRunnable implements Runnable {
 
 	/**
 	 * Kliens generálása véletlen porton:
-	 * 
 	 * @return
 	 */
 	private Socket createSocket() {
 		System.out.println("Kliens generálása véletlen porton: ");
-		while (!agent.getAgency().isGameOver) {
+		while (!agent.getAgency().isGameOver()) {
 			try {
 				return new Socket(Constants.ADRESS, RndUtil.generatePort(agent.getServerPort()));
 			} catch (IOException ex) {
@@ -119,9 +110,9 @@ public class ClientRunnable extends BaseRunnable implements Runnable {
 	}
 	
 	/**
-	 * Az ügynökség kódjának "tippelését" megvalósító függvény:
-	 * @param name
-	 * @return
+	 * Az ügynökség azonosítójának "tippelését" megvalósító függvény:
+	 * @param name Az ügynök álneve
+	 * @return A tippelt ügynökség azonosító
 	 */
 	private int guessAgencyCode(String name) {
 		int agencyCodeTip;
@@ -154,12 +145,12 @@ public class ClientRunnable extends BaseRunnable implements Runnable {
 	}
 	
 	/**
-	 * Az ügynök kódjának "tippelését" megvalósító függvény:
-	 * @param name
-	 * @param otherAgents
+	 * Az ügynök azonosítójának "tippelését" megvalósító függvény:
+	 * @param name 			Az ügynök álneve
+	 * @param agentsCount 	Az ügynökök száma a másik ügynökségnél
 	 * @return
 	 */
-	private int guessAgentCode(String name, int otherAgents) {
+	private int guessAgentCode(String name, int agentsCount) {
 		int agentCodeTip;
 		// Ha már tippeltünk erre a névre:
 		if (agent.getAgentCodeTips().containsKey(name)) {
@@ -174,9 +165,9 @@ public class ClientRunnable extends BaseRunnable implements Runnable {
 				log("Még nem tudjuk a kódját");
 				Set<Integer> badTips = agent.getAgentCodeTips().get(name).keySet();
 				
-				agentCodeTip = rnd.nextInt(otherAgents)+1;
+				agentCodeTip = rnd.nextInt(agentsCount)+1;
 				while (badTips.contains(agentCodeTip)) {
-					agentCodeTip = rnd.nextInt(otherAgents)+1;
+					agentCodeTip = rnd.nextInt(agentsCount)+1;
 				}
 				
 				agent.getAgentCodeTips().get(name).put(agentCodeTip, false);
@@ -188,7 +179,7 @@ public class ClientRunnable extends BaseRunnable implements Runnable {
 		} else {
 			log("Még nem tippeltünk erre az névre");
 			agent.getAgentCodeTips().put(name, new HashMap<Integer, Boolean>());
-			agentCodeTip = rnd.nextInt(otherAgents)+1;
+			agentCodeTip = rnd.nextInt(agentsCount)+1;
 			log("A tippünk - " + agentCodeTip);
 			agent.getAgentCodeTips().get(name).put(agentCodeTip, false);
 		}
@@ -198,8 +189,8 @@ public class ClientRunnable extends BaseRunnable implements Runnable {
 	
 	/**
 	 * Ha azonos ügynökséghez tartoznak:
-	 * @param socketPw
-	 * @param socketSc
+	 * @param socketPw	A PrintWriter objektum
+	 * @param socketSc	A Scanner objektum
 	 */
 	private void onSameAgency(PrintWriter socketPw, Scanner socketSc) {
 		log("Azonos ügynökséghez tartoznak");
@@ -215,9 +206,9 @@ public class ClientRunnable extends BaseRunnable implements Runnable {
 	
 	/**
 	 * Ha különböző ügynökséghez tartoznak:
-	 * @param name
-	 * @param socketPw
-	 * @param socketSc
+	 * @param name		Az ügynök álneve
+	 * @param socketPw	A PrintWriter objektum
+	 * @param socketSc	A Scanner objektum
 	 */
 	private void onDifferentAgencies(String name, PrintWriter socketPw, Scanner socketSc) {
 		log("Különböző ügynökséghez tartoznak");

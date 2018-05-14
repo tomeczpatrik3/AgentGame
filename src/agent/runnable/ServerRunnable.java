@@ -18,21 +18,10 @@ public class ServerRunnable extends BaseRunnable implements Runnable {
 
 	@Override
 	public void run() {
-		while (agent.hasAvailableSecrets() && !agent.getAgency().isGameOver) {
+		while (agent.hasAvailableSecrets() && !agent.getAgency().isGameOver()) {
 			try {
-				ServerSocket server;
-				//Ha tesztelünk:
-				if (agent.isTestMode()) {
-					log("----- TESZT MÓD -----");
-					server = new ServerSocket(agent.getServerPort());
-				}
-				//Ha nem:
-				else {
-					server = createServer();
-				}
-				
+				ServerSocket server = createServer();
 				agent.setServerPort(server.getLocalPort());
-				
 				server.setSoTimeout(Constants.MAX_TIMEOUT);
 				
 				try (Socket client = server.accept(); Scanner socketSc = new Scanner(client.getInputStream()); PrintWriter socketPw = new PrintWriter(client.getOutputStream());) {
@@ -109,12 +98,11 @@ public class ServerRunnable extends BaseRunnable implements Runnable {
 
 	/**
 	 * Szerver generálása véletlen porton:
-	 * 
-	 * @return
+	 * @return A generált szerver
 	 */
 	private ServerSocket createServer() {
 		System.out.println("Szerver generálása véletlen porton: ");
-		while (!agent.getAgency().isGameOver) {
+		while (!agent.getAgency().isGameOver()) {
 			try {
 				return new ServerSocket(RndUtil.generatePort(agent.getClientPort()));
 			} catch (IOException ex) {

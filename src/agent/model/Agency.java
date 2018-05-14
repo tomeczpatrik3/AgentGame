@@ -8,20 +8,22 @@ public class Agency {
 	// Beégetett információ, 2db ügynökségünk van:
 	public static int agencyCount = 2;
 
+	/*Az ügynökség neve*/
 	private String name;
+	/*Az ügynökség azonosítója*/
 	private int code;
-	
-	public boolean isGameOver;
+	/*Logkai változó, tárolja hogy véget ért-e a játék az ügynökség számára*/
+	private boolean isGameOver;
 
+	/*Az ügynökséghez tartozó ügynökök*/
 	private List<Agent> agents;
-	// Az összes titok, amit az ügynökök tárolnak (ismétlődések nélkül):
+	/*Az összes titok, amit az ügynökök tárolnak (ismétlődések nélkül)*/
 	private List<String> secrets;
 
 	public Agency(String name, int code) {
 		this.name = name;
 		this.code = code;
-		
-		isGameOver = false;
+		this.isGameOver = false;
 
 		this.agents = new ArrayList<>();
 		this.secrets = new ArrayList<>();
@@ -29,7 +31,6 @@ public class Agency {
 
 	/**
 	 * Van-e még olyan ügynök aki nem került börtönbe?
-	 * 
 	 * @return
 	 */
 	public boolean hasAvailableAgent() {
@@ -41,9 +42,7 @@ public class Agency {
 
 	/**
 	 * Van-e olyan ügynök aki az ellenfél összes titkát ismeri?
-	 * 
-	 * @param secrets
-	 *            Az ellenfél összes titka
+	 * @param secrets Az ellenfél összes titka
 	 * @return
 	 */
 	public boolean hasAllTheSecrets(List<String> secrets) {
@@ -64,7 +63,47 @@ public class Agency {
 		
 		return l;
 	}
+	
+	/**
+	 * A függvény, amelynek segítségével titkokat tudunk hozzáadni 
+	 * az összes titkot tartalmazó listánkhoz
+	 * @param secrets A titkok, amiket a listához szeretnénk adni
+	 */
+	public void addScerets(Set<String> secrets) {
+		for (String secret : secrets) {
+			if (!this.secrets.contains(secret))
+				this.secrets.add(secret);
+		}
+	}
+	
+	/**
+	 * A függvény, amely megjelníti az ügynökség státuszát
+	 */
+	public void log() {
+		System.out.println("-----------------------------------");
+		System.out.println(String.format("%s AGENCY:", name));
+		
+		System.out.println(String.format("Ügynökök száma: %d", this.getAgentsNumber()));
+		
+		System.out.println("Az összes titok (sajátok):");
+		for(String secret: secrets)
+			System.out.println(String.format("-- %s", secret));
+		
+		System.out.println("Az ügynökök adatai:");
+		for (Agent agent: agents) {
+			System.out.println(String.format("Kód: %s", agent.getAgentCode()));
+			System.out.println("Nevek:");
+			for (String name: agent.getNames())
+				System.out.println(String.format("-- %s", name));
+			System.out.println("Titkok:");
+			for (String secret: agent.getSecrets().keySet())
+				System.out.println(String.format("-- %s", secret));
+		}
+		
+		
+	}
 
+	/* GETTEREK/SETTEREK */
 	public String getName() {
 		return name;
 	}
@@ -101,35 +140,11 @@ public class Agency {
 		return this.secrets;
 	}
 
-	public void addScerets(Set<String> secrets) {
-		for (String secret : secrets) {
-			if (!this.secrets.contains(secret))
-				this.secrets.add(secret);
-		}
+	public boolean isGameOver() {
+		return isGameOver;
 	}
-	
-	public void log() {
-		System.out.println("-----------------------------------");
-		System.out.println(String.format("%s AGENCY:", name));
-		
-		System.out.println(String.format("Ügynökök száma: %d", this.getAgentsNumber()));
-		
-		System.out.println("Az összes titok (sajátok):");
-		for(String secret: secrets)
-			System.out.println(String.format("-- %s", secret));
-		
-		System.out.println("Az ügynökök adatai:");
-		for (Agent agent: agents) {
-			System.out.println(String.format("Kód: %s", agent.getAgentCode()));
-			System.out.println("Nevek:");
-			for (String name: agent.getNames())
-				System.out.println(String.format("-- %s", name));
-			System.out.println("Titkok:");
-			for (String secret: agent.getSecrets().keySet())
-				System.out.println(String.format("-- %s", secret));
-		}
-		
-		
+
+	public void setGameOver(boolean isGameOver) {
+		this.isGameOver = isGameOver;
 	}
-	
 }
