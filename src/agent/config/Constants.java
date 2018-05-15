@@ -6,7 +6,7 @@ public class Constants {
 	/*A szerver címe*/
 	public static final String ADRESS = "localhost";
 	/*A legkisebb lehetséges port*/
-	public static final int MIN_PORT = 20090;
+	public static final int MIN_PORT = 20000;
 	/*A legnagyobb lehetséges port*/
 	public static final int MAX_PORT = 20100;
 
