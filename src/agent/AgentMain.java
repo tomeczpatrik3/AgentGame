@@ -13,6 +13,8 @@ public class AgentMain {
 		List<Thread> agentThreads = new ArrayList<>();
 		
 		try {
+			System.out.println("-----ADATOK BETÖLTÉSE, INICIALIZÁLÁS-----");
+			
 			//Ügynökségekhez tartozó ügynökök számai:
 			int aAgents = Integer.parseInt(args[0]), bAgents = Integer.parseInt(args[1]);
 			System.out.println("1. ügynökség ügynökeinek száma: " + aAgents);
@@ -34,6 +36,8 @@ public class AgentMain {
 			agentThreads.addAll(createThreads(aAgency.getAgents()));
 			agentThreads.addAll(createThreads(bAgency.getAgents()));
 			
+			System.out.println("---------- JÁTÉK KEZDETE ----------");
+			
 			//Ügynökök indítása:
 			for (Thread thread: agentThreads) {
 				thread.start();
@@ -48,6 +52,8 @@ public class AgentMain {
 			) {
 				Thread.sleep(1000);
 			}
+			
+			System.out.println("---------- JÁTÉK VÉGE ----------");
 			
 			//Hogy minden szál szabályosan álljon le:
 			aAgency.setGameOver(true);

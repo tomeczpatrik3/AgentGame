@@ -25,12 +25,12 @@ public class ServerRunnable extends BaseRunnable implements Runnable {
 				server.setSoTimeout(Constants.MAX_TIMEOUT);
 				
 				try (Socket client = server.accept(); Scanner socketSc = new Scanner(client.getInputStream()); PrintWriter socketPw = new PrintWriter(client.getOutputStream());) {
-					log("Sikeresen kapcsolodott egy kliens!");
+					log("Sikeresen kapcsolodott egy kliens");
 					
 					// <----- PROTOKOL ----->
 					// A szerver elküldi az álnevei közül az egyiket
 					// véletlenszerűen.
-					log("Véletlen név elküldése!");
+					log("Véletlen név elküldése");
 					sendMessage(socketPw, agent.getRndName());
 
 					//Tipp fogadása:
@@ -108,7 +108,7 @@ public class ServerRunnable extends BaseRunnable implements Runnable {
 	 * @return A generált szerver
 	 */
 	private ServerSocket createServer() {
-		System.out.println("Szerver generálása véletlen porton: ");
+		log("Szerver generálása véletlen porton...");
 		while (!agent.getAgency().isGameOver()) {
 			try {
 				return new ServerSocket(RndUtil.generatePort(agent.getClientPort()));

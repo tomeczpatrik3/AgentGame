@@ -65,6 +65,7 @@ public class ClientRunnable extends BaseRunnable implements Runnable {
 					ex.printStackTrace();
 				}
 
+				log("Kapcsolat bontása");
 				client.close();
 				sleepRandomTime();
 			//Ha a szerver, amire csatlakozni szeretnénk már nem él
@@ -84,7 +85,7 @@ public class ClientRunnable extends BaseRunnable implements Runnable {
 	 * Alvás véletlen hosszú ideig:
 	 */
 	public void sleepRandomTime() {
-		System.out.println("Alvás véletlen hosszú ideig...");
+		log("Alvás véletlen hosszú ideig...");
 		try {
 			Thread.sleep(RndUtil.generateTimeout());
 		} catch (InterruptedException ex) {
@@ -97,7 +98,7 @@ public class ClientRunnable extends BaseRunnable implements Runnable {
 	 * @return
 	 */
 	private Socket createSocket() {
-		System.out.println("Kliens generálása véletlen porton: ");
+		log("Kliens generálása véletlen porton...");
 		while (!agent.getAgency().isGameOver()) {
 			try {
 				return new Socket(Constants.ADRESS, RndUtil.generatePort(agent.getServerPort()));
@@ -211,14 +212,14 @@ public class ClientRunnable extends BaseRunnable implements Runnable {
 	 * @param socketSc	A Scanner objektum
 	 */
 	private void onDifferentAgencies(String name, PrintWriter socketPw, Scanner socketSc) {
-		log("Különböző ügynökséghez tartoznak");
+		log("Különböző ügynökséghez tartozunk");
 		sendMessage(socketPw, "???");
 		
 		// A másik ügynökségben dolgozó ügynökök
 		// számának lekérdezése:
-		log("Másik ügynökségben dolgozó ügynökök számának lekérdezése");
 		int otherAgents = Integer.parseInt(socketSc.nextLine());
-
+		log("Másik ügynökségben dolgozó ügynökök számának lekérdezése - "+otherAgents);
+		
 		int agentCodeTip = guessAgentCode(name, otherAgents);
 		sendMessage(socketPw, agentCodeTip);
 
@@ -228,7 +229,7 @@ public class ClientRunnable extends BaseRunnable implements Runnable {
 			
 			// Ha még nem volt eltárolva a helyes tipp:
 			if (!agent.hasCorrectAgentCodeTipForName(name)) {
-				log("Még nem volt helyes tipp erre a névre, ezért eltároljuk");
+				log("Még nem volt helyes tipp erre a névre, ezért eltároljuk a nevet");
 				agent.getAgentCodeTips().get(name).put(agentCodeTip, true);
 			}
 		}		
